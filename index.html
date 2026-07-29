@@ -1,0 +1,979 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Rechazos Envase Retornable — Dashboard</title>
+<style>
+  :root {
+    --dark-green: #1B5E20;
+    --green: #2E7D32;
+    --mid-green: #43A047;
+    --light-green: #66BB6A;
+    --pale-green: #E8F5E9;
+    --card-green: #C8E6C9;
+    --white: #FFFFFF;
+    --black: #000000;
+    --gray: #555555;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: Arial, Helvetica, sans-serif;
+    background: #F6FBF6;
+    color: var(--black);
+  }
+  .header { background: var(--dark-green); padding: 22px 28px; color: var(--white); }
+  .header .eyebrow { font-size: 12px; letter-spacing: 1.5px; color: var(--pale-green); font-weight: 700; }
+  .header h1 { font-size: 26px; font-weight: 800; margin: 4px 0 0; }
+  .header .sub { font-size: 13px; color: var(--card-green); margin-top: 6px; }
+  .header .note {
+    font-size: 11.5px; color: var(--pale-green); margin-top: 8px;
+    background: rgba(255,255,255,0.08); display: inline-block; padding: 4px 10px; border-radius: 6px;
+  }
+  .container { max-width: 1280px; margin: 0 auto; padding: 24px 28px 60px; }
+
+  .kpi-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 26px; }
+  .kpi-card { background: var(--dark-green); border-radius: 12px; padding: 16px 14px; text-align: center; }
+  .kpi-card .value { font-size: 26px; font-weight: 800; color: var(--white); }
+  .kpi-card .label { font-size: 11.5px; color: var(--pale-green); margin-top: 4px; }
+
+  .section-label { display: flex; align-items: center; gap: 8px; margin: 8px 0 14px; }
+  .section-label .bar { width: 4px; height: 20px; background: var(--dark-green); border-radius: 2px; }
+  .section-label h2 { font-size: 18px; font-weight: 700; color: var(--dark-green); margin: 0; }
+
+  .chart-card {
+    background: var(--white); border: 1px solid var(--card-green); border-radius: 12px;
+    padding: 16px 18px 10px; margin-bottom: 14px;
+  }
+  .chart-card .title { font-size: 13px; font-weight: 700; color: var(--dark-green); margin-bottom: 8px; }
+  .chart-card .footnote { font-size: 10.5px; color: var(--gray); margin-top: 6px; padding-bottom: 4px; }
+  .chart-card .footnote.italic { font-style: italic; }
+  .chart-card svg { width: 100%; height: auto; display: block; }
+  .legend-row { display: flex; gap: 18px; justify-content: center; margin-top: 6px; flex-wrap: wrap; }
+  .legend-item { display: flex; align-items: center; gap: 6px; font-size: 11.5px; color: var(--black); }
+  .legend-swatch { width: 11px; height: 11px; border-radius: 3px; display: inline-block; }
+  .legend-line { width: 16px; height: 2.5px; display: inline-block; }
+
+  .grid-2 { display: grid; grid-template-columns: 1.2fr 1fr; gap: 14px; }
+  .grid-2.even { grid-template-columns: 1fr 1fr; }
+  .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+
+  .tabs { display: flex; gap: 8px; margin-bottom: 14px; flex-wrap: wrap; }
+  .tab-btn {
+    padding: 8px 18px; border-radius: 8px; border: 1px solid var(--dark-green);
+    background: var(--white); color: var(--dark-green); font-weight: 700; font-size: 13px;
+    cursor: pointer; font-family: Arial, sans-serif;
+  }
+  .tab-btn.active { background: var(--dark-green); color: var(--white); }
+
+  .profundizar-card { background: var(--pale-green); border-radius: 12px; padding: 14px 16px; }
+  .profundizar-card .head { display: flex; align-items: center; gap: 10px; margin-bottom: 6px; }
+  .profundizar-card .icon-circle {
+    width: 34px; height: 34px; border-radius: 50%; background: var(--mid-green);
+    display: flex; align-items: center; justify-content: center; flex-shrink: 0; font-size: 16px;
+  }
+  .profundizar-card .ptitle { font-size: 13px; font-weight: 700; color: var(--dark-green); }
+  .profundizar-card .ptext { font-size: 12px; color: var(--black); }
+
+  .plan-card { background: var(--white); border: 1px solid var(--card-green); border-radius: 12px; overflow: hidden; display: flex; flex-direction: column; }
+  .plan-card .plan-head { background: var(--dark-green); color: var(--white); padding: 10px 14px; }
+  .plan-card .plan-head .fase { display:flex; align-items:center; gap:6px; font-size: 12px; font-weight: 700; color: var(--pale-green); }
+  .plan-card .plan-head .titulo { font-size: 14.5px; font-weight: 700; margin-top: 2px; }
+  .plan-card .plan-body { padding: 12px 14px; flex: 1; }
+  .plan-card .plan-body ul { margin: 0; padding-left: 18px; font-size: 12px; line-height: 1.5; }
+  .plan-card .plan-body li { margin-bottom: 4px; }
+  .plan-card .plan-foot { padding: 10px 14px; background: var(--pale-green); font-size: 11px; }
+  .plan-card .plan-foot .resp { color: var(--dark-green); font-weight: 700; }
+
+  .metas-box { background: var(--dark-green); border-radius: 12px; padding: 18px 20px; }
+  .metas-box .head { display: flex; align-items: center; gap: 8px; margin-bottom: 14px; color: var(--white); font-size: 14px; font-weight: 700; }
+  .metas-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+  .meta-card { background: var(--green); border: 1px solid var(--light-green); border-radius: 10px; padding: 14px 10px; text-align: center; }
+  .meta-card .valor { font-size: 22px; font-weight: 800; color: var(--white); }
+  .meta-card .label { font-size: 11.5px; font-weight: 700; color: var(--pale-green); margin-top: 4px; }
+  .meta-card .sub { font-size: 10px; color: var(--card-green); margin-top: 2px; }
+
+  .warning-line { display: flex; gap: 8px; align-items: flex-start; margin-top: 14px; font-size: 11px; color: var(--gray); }
+  .divider { border-top: 2px solid var(--card-green); padding-top: 24px; margin-top: 12px; }
+  .loc-kpi { background: var(--dark-green); border-radius: 10px; padding: 14px; text-align: center; }
+  .loc-kpi .value { font-size: 22px; font-weight: 800; color: var(--white); }
+  .loc-kpi .label { font-size: 11px; color: var(--pale-green); margin-top: 2px; }
+
+  .grupo-toggle { display: flex; gap: 10px; margin-bottom: 16px; }
+  .grupo-btn { padding: 10px 28px; border-radius: 8px; border: 1px solid var(--dark-green); background: var(--white); color: var(--dark-green); font-weight: 700; font-size: 14px; cursor: pointer; font-family: Arial, sans-serif; }
+  .grupo-btn.active { background: var(--dark-green); color: var(--white); }
+  .grupo-btn.active.insumos-active { background: #5D6D5E; border-color: #5D6D5E; }
+
+  .grupo-panel { border-radius: 12px; padding: 20px 22px; color: var(--white); margin-bottom: 10px; }
+  .grupo-panel.envase { background: var(--dark-green); }
+  .grupo-panel.insumos { background: #5D6D5E; }
+  .grupo-panel .g-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 16px; }
+  .grupo-panel .g-sub { font-size: 12px; opacity: 0.85; }
+  .grupo-panel .g-tasa { font-size: 26px; font-weight: 800; }
+  .grupo-panel .g-tasa-label { font-size: 10px; opacity: 0.8; text-align: right; }
+  .grupo-panel .g-stats-row { display: flex; gap: 32px; margin-bottom: 18px; }
+  .grupo-panel .g-stat .v { font-size: 24px; font-weight: 800; }
+  .grupo-panel .g-stat .l { font-size: 11px; opacity: 0.85; }
+  .grupo-panel .g-items { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+  .grupo-panel .g-item-card { background: rgba(255,255,255,0.1); border-radius: 8px; padding: 10px 12px; }
+  .grupo-panel .g-item-card .g-item-label { font-size: 11.5px; font-weight: 700; margin-bottom: 6px; }
+  .grupo-panel .g-item-card .g-bar-wrap { background: rgba(255,255,255,0.2); border-radius: 4px; height: 8px; overflow: hidden; margin-bottom: 5px; }
+  .grupo-panel .g-item-card .g-bar-fill { height: 100%; background: var(--light-green); border-radius: 4px; }
+  .grupo-panel .g-item-card .g-item-val { font-size: 11px; opacity: 0.9; }
+
+  @media (max-width: 900px) {
+    .kpi-row, .grid-3, .metas-grid { grid-template-columns: repeat(2, 1fr); }
+    .grid-2, .grid-2.even { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="eyebrow">DASHBOARD GERENCIAL · CALIDAD DE ENVASE RETORNABLE</div>
+  <h1>Rechazos Envase Retornable — Análisis y Plan de Trabajo (30 días)</h1>
+  <div class="sub">Basado en la base de datos de los selectivos de envase ejecutados en planta · Semanas 20–31 de 2026</div>
+</div>
+
+<div class="container">
+
+  <!-- CLASIFICACION POR TIPO DE REFERENCIA -->
+  <div class="section-label"><div class="bar"></div><h2>División de la Base de Datos por Tipo de Referencia</h2></div>
+  <div class="grupo-toggle" id="grupoToggle"></div>
+  <div id="grupoPanel"></div>
+
+
+
+  <div id="envaseView">
+  <div class="kpi-row" id="kpiRow"></div>
+
+  <div class="section-label"><div class="bar"></div><h2>Análisis — Datos y Gráficas</h2></div>
+
+  <div class="chart-card">
+    <div class="title">Pareto de motivos de rechazo (unidades y % acumulado)</div>
+    <div id="paretoChart"></div>
+  </div>
+
+  <div class="grid-2">
+    <div class="chart-card">
+      <div class="title">Defectos por referencia y motivo (envases críticos)</div>
+      <div id="referenciaChart"></div>
+      <div class="footnote">REF PET (10,595) y FAMILIAR (8,634) concentran el 75% de los defectos — prioridad de intervención.</div>
+    </div>
+    <div class="chart-card">
+      <div class="title">Defectos por origen y tasa de rechazo</div>
+      <div id="locacionesChart"></div>
+      <div class="footnote italic">Maicao: tasa alta (244.4%) sobre muestra muy pequeña (90 cajas) — ampliar muestreo antes de concluir.</div>
+    </div>
+  </div>
+
+  <div class="chart-card">
+    <div class="title">Tendencia semanal de la tasa de rechazo (%)</div>
+    <div id="tendenciaChart"></div>
+  </div>
+
+  <div class="section-label"><div class="bar"></div><h2>Detalle de las 3 Locaciones Críticas</h2></div>
+  <div class="tabs" id="locTabs"></div>
+
+  <div class="grid-3" id="locKpis" style="margin-bottom:14px;"></div>
+
+  <div class="grid-2 even">
+    <div class="chart-card">
+      <div class="title" id="causasTitle">— Principales causas de rechazo</div>
+      <div id="causasChart"></div>
+    </div>
+    <div class="chart-card">
+      <div class="title" id="refLocTitle">— Cantidad de defectos por referencia</div>
+      <div id="refLocChart"></div>
+    </div>
+  </div>
+
+  <div class="chart-card">
+    <div class="title" id="semanalLocTitle">— Tendencia semanal de tasa (%)</div>
+    <div id="semanalLocChart"></div>
+    <div class="footnote italic" id="semanalLocFoot"></div>
+  </div>
+
+  <div class="chart-card" style="background:var(--pale-green); border:none;">
+    <div class="title" id="insightTitle">— Lectura del detalle</div>
+    <div id="insightText" style="font-size:12.5px; color:var(--black); line-height:1.6;"></div>
+  </div>
+
+  <div class="section-label" style="margin-top:16px;"><div class="bar"></div><h2>Dónde Profundizar</h2></div>
+  <div class="grid-3" id="profundizarGrid" style="margin-bottom:30px;"></div>
+
+  <div class="divider">
+    <div class="section-label"><div class="bar"></div><h2>Plan de Trabajo — 30 Días</h2></div>
+    <div class="grid-3" id="planGrid" style="margin-bottom:20px;"></div>
+
+    <div class="metas-box">
+      <div class="head">🎯 Metas del sprint de 30 días</div>
+      <div class="metas-grid" id="metasGrid"></div>
+    </div>
+
+    <div class="warning-line">
+      ⚠️ <span>Metas ajustadas a un ciclo corto de 30 días (foco en diagnóstico, estandarización y control inicial). Al cierre del sprint se recomienda evaluar resultados y definir el siguiente ciclo de mejora.</span>
+    </div>
+  </div>
+  </div>
+
+  <!-- ================= INSUMOS VIEW ================= -->
+  <div id="insumosView" style="display:none;">
+    <div class="kpi-row" id="kpiRowInsumos"></div>
+
+    <div class="section-label"><div class="bar"></div><h2>Análisis — Datos y Gráficas (Insumos)</h2></div>
+
+    <div class="chart-card">
+      <div class="title">Pareto de motivos de rechazo — Insumos (unidades y % acumulado)</div>
+      <div id="paretoChartIns"></div>
+    </div>
+
+    <div class="grid-2 even">
+      <div class="chart-card">
+        <div class="title">Defectos por tipo de insumo</div>
+        <div id="referenciaChartIns"></div>
+        <div class="footnote">CANASTA (421) concentra el 92% de los defectos de insumos; ESTIBA aporta 36.</div>
+      </div>
+      <div class="chart-card">
+        <div class="title">Defectos por origen y tasa de rechazo — Insumos</div>
+        <div id="locacionesChartIns"></div>
+        <div class="footnote italic">Tasas muy por debajo del 2% en todos los orígenes — sin focos críticos.</div>
+      </div>
+    </div>
+
+    <div class="chart-card">
+      <div class="title">Tendencia semanal de la tasa de rechazo — Insumos (%)</div>
+      <div id="tendenciaChartIns"></div>
+    </div>
+
+    <div class="section-label" style="margin-top:16px;"><div class="bar"></div><h2>Puntos de Atención — Insumos</h2></div>
+    <div class="grid-3" id="atencionGridIns" style="margin-bottom:20px;"></div>
+
+    <div class="metas-box" style="background:#5D6D5E;">
+      <div class="head">📌 Lectura general del grupo Insumos</div>
+      <div style="font-size:12.5px; color:var(--pale-green); line-height:1.5;">
+        Con una tasa de rechazo de apenas 0.7% (457 defectos sobre 64,017 cajas), el grupo Insumos no requiere un plan de acción dedicado como el de Envase.
+        Rotura es la causa dominante (234 de 457, el 51%), concentrada en canastas. Se recomienda mantener un monitoreo periódico (no diario) y revisar
+        Rotura si su participación supera el 60% en algún corte semanal.
+      </div>
+    </div>
+  </div>
+
+</div>
+
+
+<script>
+const C = {
+  darkGreen: "#1B5E20", green: "#2E7D32", midGreen: "#43A047",
+  lightGreen: "#66BB6A", paleGreen: "#E8F5E9", cardGreen: "#C8E6C9",
+  white: "#FFFFFF", black: "#000000", gray: "#555555",
+};
+const REF_COLORS = { FAMILIAR: C.midGreen, PERSONAL: C.lightGreen, "REF PET": C.darkGreen };
+
+// ================= DATA =================
+const KPIS = [
+  { label: "Unidades con defecto", value: "25,674" },
+  { label: "Tasa de rechazo global", value: "41.1%" },
+  { label: "Defectos = 61% del total", value: "2" },
+  { label: "Orígenes = 82% del volumen", value: "3" },
+];
+
+const GRUPOS = {
+  envase: {
+    nombre: "Envase",
+    sub: "PERSONAL · FAMILIAR · REF PET — producto retornable",
+    cajas: 62487, defectos: 25674, tasa: 41.1,
+    items: [
+      { label: "REF PET", valor: 10595, tasa: 42.2 },
+      { label: "FAMILIAR", valor: 8634, tasa: 34.7 },
+      { label: "PERSONAL", valor: 6445, tasa: 51.6 },
+    ],
+  },
+  insumos: {
+    nombre: "Insumos",
+    sub: "CANASTAS · ESTIBAS — elementos de manejo logístico",
+    cajas: 64017, defectos: 457, tasa: 0.7,
+    items: [
+      { label: "CANASTA", valor: 421, tasa: 0.7 },
+      { label: "ESTIBA", valor: 36, tasa: 2.4 },
+    ],
+  },
+};
+
+// ---- Datos exclusivos del grupo INSUMOS ----
+const PARETO_INS = [
+  { causa: "Rotura", unidades: 234 },
+  { causa: "Maltratado", unidades: 80 },
+  { causa: "Fondo", unidades: 36 },
+  { causa: "Pintura", unidades: 32 },
+  { causa: "Asa", unidades: 29 },
+  { causa: "Extrasucio", unidades: 18 },
+  { causa: "Cemento", unidades: 10 },
+  { causa: "Extrasucio (No rec)", unidades: 9 },
+  { causa: "Olor", unidades: 5 },
+  { causa: "Cracking", unidades: 4 },
+];
+(() => {
+  const total = 457; let cum = 0;
+  PARETO_INS.forEach(d => { cum += d.unidades; d.acumulado = +(cum/total*100).toFixed(1); });
+})();
+
+const REFERENCIA_INS = [ { tipo: "CANASTA", valor: 421 }, { tipo: "ESTIBA", valor: 36 } ];
+
+const LOCACIONES_INS = [
+  { origen: "Barranquilla Sur", defectos: 163, tasa: 0.70 },
+  { origen: "Cartagena", defectos: 148, tasa: 0.78 },
+  { origen: "Santa Marta", defectos: 71, tasa: 0.78 },
+  { origen: "Valledupar", defectos: 42, tasa: 1.00 },
+  { origen: "El Banco", defectos: 6, tasa: 1.17 },
+  { origen: "Bosconia", defectos: 5, tasa: 0.96 },
+  { origen: "Montería", defectos: 9, tasa: 0.33 },
+];
+
+const TENDENCIA_INS = [
+  { semana: "S20", tasa: 0.49 }, { semana: "S21", tasa: 1.94 }, { semana: "S22", tasa: 0.48 },
+  { semana: "S23", tasa: 0.88 }, { semana: "S24", tasa: 1.74 }, { semana: "S25", tasa: 0.77 },
+  { semana: "S26", tasa: 0.52 }, { semana: "S27", tasa: 0.24 }, { semana: "S28", tasa: 0.33 },
+  { semana: "S29", tasa: 0.49 }, { semana: "S30", tasa: 0.14 },
+];
+
+const ATENCION_INS = [
+  { icon: "🔧", title: "Rotura en canastas", text: "Es la causa dominante (234 de 457, 51%). Revisar manejo en cargue/descargue y apilamiento en CEDIs." },
+  { icon: "🧹", title: "Maltratado y pintura", text: "80 y 32 unidades respectivamente — asociado a desgaste por uso; monitorear antigüedad del parque de canastas." },
+  { icon: "📊", title: "Monitoreo periódico", text: "Tasa global de 0.7% no amerita seguimiento diario; se sugiere revisión mensual salvo desviación relevante." },
+];
+
+const KPIS_INS = [
+  { label: "Unidades con defecto", value: "457" },
+  { label: "Tasa de rechazo global", value: "0.7%" },
+  { label: "Causa dominante: Rotura", value: "51%" },
+  { label: "Orígenes con mayor volumen", value: "3" },
+];
+
+const PARETO = [
+  { causa: "Extrasucio", unidades: 12219 },
+  { causa: "Extrasucio (No rec)", unidades: 3524 },
+  { causa: "Cracking", unidades: 2473 },
+  { causa: "Rotura", unidades: 2472 },
+  { causa: "Cuerpo Extraño", unidades: 1047 },
+  { causa: "Olor", unidades: 919 },
+  { causa: "Maltratado", unidades: 844 },
+  { causa: "Scuffing", unidades: 602 },
+  { causa: "Pintura", unidades: 601 },
+  { causa: "Cemento", unidades: 438 },
+];
+(() => {
+  const total = 25674; let cum = 0;
+  PARETO.forEach(d => { cum += d.unidades; d.acumulado = +(cum/total*100).toFixed(1); });
+})();
+
+const REFERENCIA = [
+  { motivo: "Extrasucio", FAMILIAR: 4485, PERSONAL: 3754, "REF PET": 3980 },
+  { motivo: "Cracking", FAMILIAR: 92, PERSONAL: 3, "REF PET": 2378 },
+  { motivo: "Rotura", FAMILIAR: 1145, PERSONAL: 911, "REF PET": 416 },
+  { motivo: "Extrasucio (No rec)", FAMILIAR: 1383, PERSONAL: 706, "REF PET": 1435 },
+  { motivo: "Otros", FAMILIAR: 1529, PERSONAL: 1071, "REF PET": 2386 },
+];
+
+const LOCACIONES = [
+  { origen: "Barranquilla Sur", defectos: 9147, tasa: 40.2 },
+  { origen: "Cartagena", defectos: 8110, tasa: 43.5 },
+  { origen: "Santa Marta", defectos: 3714, tasa: 41.9 },
+  { origen: "Valledupar", defectos: 1235, tasa: 30.3 },
+  { origen: "Montería", defectos: 1119, tasa: 42.1 },
+  { origen: "Corozal", defectos: 760, tasa: 63.3 },
+  { origen: "Maicao", defectos: 220, tasa: 244.4 },
+];
+
+const TENDENCIA = [
+  { semana: "S20", tasa: 56.81 }, { semana: "S21", tasa: 23.71 }, { semana: "S22", tasa: 54.86 },
+  { semana: "S23", tasa: 36.69 }, { semana: "S24", tasa: 41.08 }, { semana: "S25", tasa: 31.94 },
+  { semana: "S26", tasa: 31.51 }, { semana: "S27", tasa: 32.05 }, { semana: "S28", tasa: 49.77 },
+  { semana: "S29", tasa: 48.22 }, { semana: "S30", tasa: 27.08 },
+];
+
+const LOC_DETAIL = {
+  "Barranquilla Sur": {
+    cajas: 22780, defectos: 9147, tasa: 40.2,
+    causas: [
+      { causa: "Extrasucio", valor: 4201 }, { causa: "Extrasucio (No rec)", valor: 1248 },
+      { causa: "Cracking", valor: 1168 }, { causa: "Rotura", valor: 742 },
+      { causa: "Maltratado", valor: 397 }, { causa: "Olor", valor: 361 }, { causa: "Otros", valor: 1030 },
+    ],
+    referencia: [ { ref: "REF PET", valor: 5283 }, { ref: "FAMILIAR", valor: 3607 }, { ref: "PERSONAL", valor: 257 } ],
+    turno: [
+      { turno: "Turno 1", cajas: 12500, def: 5644, tasa: 45.2 },
+      { turno: "Turno 2", cajas: 2580, def: 1219, tasa: 47.2 },
+      { turno: "Turno 3", cajas: 7700, def: 2284, tasa: 29.7 },
+    ],
+    semanal: [
+      { semana: "S20", tasa: 63.0 }, { semana: "S21", tasa: 34.6 }, { semana: "S22", tasa: 46.2 },
+      { semana: "S23", tasa: 35.6 }, { semana: "S24", tasa: 30.9 }, { semana: "S25", tasa: 32.6 },
+      { semana: "S26", tasa: 28.9 }, { semana: "S27", tasa: 26.7 }, { semana: "S28", tasa: 50.9 },
+      { semana: "S29", tasa: 46.1 }, { semana: "S30", tasa: 24.1 },
+    ],
+    note: null,
+  },
+  "Cartagena": {
+    cajas: 18640, defectos: 8110, tasa: 43.5,
+    causas: [
+      { causa: "Extrasucio", valor: 3609 }, { causa: "Extrasucio (No rec)", valor: 1147 },
+      { causa: "Rotura", valor: 914 }, { causa: "Cracking", valor: 765 },
+      { causa: "Cuerpo Extraño", valor: 421 }, { causa: "Olor", valor: 302 }, { causa: "Otros", valor: 952 },
+    ],
+    referencia: [ { ref: "REF PET", valor: 3288 }, { ref: "FAMILIAR", valor: 2353 }, { ref: "PERSONAL", valor: 2469 } ],
+    turno: [
+      { turno: "Turno 1", cajas: 8480, def: 5277, tasa: 62.2 },
+      { turno: "Turno 2", cajas: 1280, def: 395, tasa: 30.9 },
+      { turno: "Turno 3", cajas: 8880, def: 2438, tasa: 27.5 },
+    ],
+    semanal: [
+      { semana: "S20", tasa: 46.2 }, { semana: "S21", tasa: 17.9 }, { semana: "S22", tasa: 62.9 },
+      { semana: "S23", tasa: 44.8 }, { semana: "S24", tasa: 39.6 }, { semana: "S25", tasa: 31.2 },
+      { semana: "S26", tasa: 36.4 }, { semana: "S27", tasa: 32.4 }, { semana: "S28", tasa: 62.3 },
+      { semana: "S29", tasa: 56.3 }, { semana: "S30", tasa: 33.1 },
+    ],
+    note: null,
+  },
+  "Santa Marta": {
+    cajas: 8869, defectos: 3714, tasa: 41.9,
+    causas: [
+      { causa: "Extrasucio", valor: 1801 }, { causa: "Extrasucio (No rec)", valor: 480 },
+      { causa: "Cracking", valor: 373 }, { causa: "Rotura", valor: 319 },
+      { causa: "Cuerpo Extraño", valor: 150 }, { causa: "Maltratado", valor: 131 }, { causa: "Otros", valor: 460 },
+    ],
+    referencia: [ { ref: "REF PET", valor: 1514 }, { ref: "FAMILIAR", valor: 1064 }, { ref: "PERSONAL", valor: 1136 } ],
+    turno: [
+      { turno: "Turno 1", cajas: 1159, def: 631, tasa: 54.4 },
+      { turno: "Turno 2", cajas: 990, def: 435, tasa: 43.9 },
+      { turno: "Turno 3", cajas: 6720, def: 2648, tasa: 39.4 },
+    ],
+    semanal: [
+      { semana: "S20", tasa: 48.3 }, { semana: "S21", tasa: 18.3 }, { semana: "S22", tasa: 42.9 },
+      { semana: "S23", tasa: 36.5 }, { semana: "S24", tasa: 72.3 }, { semana: "S25", tasa: 32.6 },
+      { semana: "S26", tasa: null }, { semana: "S27", tasa: 41.2 }, { semana: "S28", tasa: 29.7 },
+      { semana: "S29", tasa: 61.6 }, { semana: "S30", tasa: null },
+    ],
+    note: "Sin registros de muestreo en S26 y S30 en esta base.",
+  },
+};
+
+const PROFUNDIZAR = [
+  { icon: "🔍", title: "Auditoría en CEDIs", text: "Verificar manejo y almacenamiento en Barranquilla Sur y Cartagena." },
+  { icon: "📋", title: "Clasificación manual", text: "Revisar criterios y consistencia del personal en la inspección visual." },
+  { icon: "🚚", title: "Transporte y estiba", text: "Evaluar prácticas de cargue, aseguramiento y tiempos en ruta." },
+  { icon: "💧", title: "Lavadora de botellas", text: "Validar parámetros de lavado frente a la incidencia de Extrasucio." },
+  { icon: "🛡️", title: "Inspección electrónica", text: "Confirmar calibración de sensores para Cracking y Rotura." },
+  { icon: "👥", title: "Proveedores y clientes", text: "Revisar retorno de envase por cliente y proveedor de tapas." },
+];
+
+const PLAN_30 = [
+  {
+    fase: "Días 1–10", titulo: "Diagnóstico y control inmediato",
+    acciones: ["Pareto diario por origen y referencia (foco en Extrasucio)", "Mapear volumen de envase Personal y Familiar que llega sucio, por CEDI de origen", "Auditoría exprés en Barranquilla Sur y Cartagena"],
+    responsable: "Calidad + Logística", indicador: "Pareto publicado a diario · mapeo de volumen a pre-lavar completado",
+  },
+  {
+    fase: "Días 11–20", titulo: "Pre-lavado separado y estandarización",
+    acciones: ["Diseñar y pilotear circuito de pre-lavado para envase Personal y Familiar antes de ingresar a línea (Planta Barranquilla)", "Ajuste de parámetros de inspección electrónica (Cracking / Rotura)", "1 evento Kaizen/Gemba en línea de lavado"],
+    responsable: "Operaciones + Producción", indicador: "Piloto de pre-lavado en operación · sin paradas de línea asociadas",
+  },
+  {
+    fase: "Días 21–30", titulo: "Control y consolidación",
+    acciones: ["Evaluar impacto del pre-lavado en Extrasucio (Personal/Familiar) y en continuidad de línea", "Tablero de KPIs de rechazo por origen y por proceso de lavado", "Balance de resultados y definición de siguiente ciclo"],
+    responsable: "Calidad + Comercial", indicador: "Tablero activo · meta parcial: −15% Extrasucio y −10% Rotura/Cracking",
+  },
+];
+
+const HALLAZGO_OPERATIVO = "El lavado de envase solo aplica a <b>Personal</b> y <b>Familiar</b> (no a REF PET), y solo se realiza en <b>Planta Barranquilla</b>. Como Extrasucio es la causa dominante en las 3 locaciones críticas, el plan prioriza enviar este envase a un <b>pre-lavado separado antes de que ingrese a la línea de producción</b>, evitando afectar el proceso productivo y atacando la causa raíz del defecto.";
+
+const METAS_30 = [
+  { valor: "-15%", label: "Extrasucio", sub: "vs. línea base 12,219 un." },
+  { valor: "-10%", label: "Rotura + Cracking", sub: "vs. línea base 4,945 un." },
+  { valor: "Piloto", label: "Pre-lavado Personal + Familiar", sub: "en Planta Barranquilla" },
+  { valor: "Diario", label: "Pareto y KPIs", sub: "por origen y referencia" },
+];
+
+// ================= STATIC BLOCKS =================
+document.getElementById("kpiRow").innerHTML = KPIS.map(k =>
+  `<div class="kpi-card"><div class="value">${k.value}</div><div class="label">${k.label}</div></div>`
+).join("");
+
+function fmtNum(n) { return Number(n).toLocaleString("es-CO"); }
+
+function renderGrupoToggle() {
+  document.getElementById("grupoToggle").innerHTML = `
+    <button class="grupo-btn ${selectedGrupo === "envase" ? "active" : ""}" data-group="envase">Envase</button>
+    <button class="grupo-btn ${selectedGrupo === "insumos" ? "active insumos-active" : ""}" data-group="insumos">Insumo</button>`;
+
+  document.querySelectorAll(".grupo-btn").forEach(btn => {
+    btn.addEventListener("click", () => {
+      selectedGrupo = btn.getAttribute("data-group");
+      renderGrupoToggle();
+      renderGrupoPanel();
+      document.getElementById("envaseView").style.display = selectedGrupo === "envase" ? "block" : "none";
+      document.getElementById("insumosView").style.display = selectedGrupo === "insumos" ? "block" : "none";
+      if (selectedGrupo === "insumos") renderInsumosCharts();
+    });
+  });
+}
+
+function renderGrupoPanel() {
+  const g = GRUPOS[selectedGrupo];
+  const maxItem = Math.max(...g.items.map(i => i.valor));
+  document.getElementById("grupoPanel").innerHTML = `
+    <div class="grupo-panel ${selectedGrupo}">
+      <div class="g-top">
+        <div>
+          <div class="g-sub">${g.sub}</div>
+        </div>
+        <div>
+          <div class="g-tasa">${g.tasa}%</div>
+          <div class="g-tasa-label">TASA DE RECHAZO</div>
+        </div>
+      </div>
+      <div class="g-stats-row">
+        <div class="g-stat"><div class="v">${fmtNum(g.defectos)}</div><div class="l">Defectos</div></div>
+      </div>
+      <div class="g-items">
+        ${g.items.map(i => `
+          <div class="g-item-card">
+            <div class="g-item-label">${i.label}</div>
+            <div class="g-bar-wrap"><div class="g-bar-fill" style="width:${(i.valor/maxItem*100).toFixed(1)}%"></div></div>
+            <div class="g-item-val">${fmtNum(i.valor)} defectos · ${i.tasa}%</div>
+          </div>`).join("")}
+      </div>
+    </div>`;
+}
+
+let selectedGrupo = "envase";
+renderGrupoToggle();
+renderGrupoPanel();
+
+document.getElementById("profundizarGrid").innerHTML = PROFUNDIZAR.map(p => `
+  <div class="profundizar-card">
+    <div class="head"><div class="icon-circle">${p.icon}</div><div class="ptitle">${p.title}</div></div>
+    <div class="ptext">${p.text}</div>
+  </div>`).join("");
+
+document.getElementById("planGrid").innerHTML = PLAN_30.map(f => `
+  <div class="plan-card">
+    <div class="plan-head">
+      <div class="fase">📅 ${f.fase}</div>
+      <div class="titulo">${f.titulo}</div>
+    </div>
+    <div class="plan-body"><ul>${f.acciones.map(a => `<li>${a}</li>`).join("")}</ul></div>
+    <div class="plan-foot"><div class="resp">${f.responsable}</div><div>${f.indicador}</div></div>
+  </div>`).join("");
+
+document.getElementById("metasGrid").innerHTML = METAS_30.map(m => `
+  <div class="meta-card">
+    <div class="valor">${m.valor}</div>
+    <div class="label">${m.label}</div>
+    <div class="sub">${m.sub}</div>
+  </div>`).join("");
+
+// ================= SVG CHART ENGINE (no external deps) =================
+function fmt(n) { return Number(n).toLocaleString("es-CO"); }
+
+function niceMax(max) {
+  if (max <= 0) return 10;
+  const mag = Math.pow(10, Math.floor(Math.log10(max)));
+  const norm = max / mag;
+  let step;
+  if (norm <= 1) step = 1;
+  else if (norm <= 2) step = 2;
+  else if (norm <= 5) step = 5;
+  else step = 10;
+  return step * mag;
+}
+
+function gridLines(maxVal, count) {
+  const vals = [];
+  for (let i = 0; i <= count; i++) vals.push(+(maxVal * i / count).toFixed(2));
+  return vals;
+}
+
+// Vertical bar chart, optional secondary line (dual axis)
+function comboChart(elId, categories, bars, lines, opts) {
+  opts = opts || {};
+  const W = 900, H = 340;
+  const left = 55, right = lines ? 55 : 20, top = 20, bottomLabels = opts.rotateLabels === false ? 30 : 78;
+  const bottom = H - bottomLabels;
+  const plotW = W - left - right, plotH = bottom - top;
+  const n = categories.length;
+  const slot = plotW / n;
+  const barW = slot * (opts.barWidthRatio || 0.5);
+
+  const barMax = niceMax(Math.max(...bars.values) * 1.05);
+  const lineMax = lines ? (opts.lineMax || niceMax(Math.max(...lines.values) * 1.1)) : null;
+
+  let svg = `<svg viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg" font-family="Arial, sans-serif">`;
+
+  // grid + left axis labels
+  const gl = gridLines(barMax, 4);
+  gl.forEach(v => {
+    const y = bottom - (v / barMax) * plotH;
+    svg += `<line x1="${left}" y1="${y}" x2="${left + plotW}" y2="${y}" stroke="#EAF3EA" stroke-width="1"/>`;
+    svg += `<text x="${left - 8}" y="${y + 3}" font-size="10" fill="${C.black}" text-anchor="end">${fmt(v)}</text>`;
+  });
+  // axis lines
+  svg += `<line x1="${left}" y1="${top}" x2="${left}" y2="${bottom}" stroke="#CCCCCC" stroke-width="1"/>`;
+  svg += `<line x1="${left}" y1="${bottom}" x2="${left + plotW}" y2="${bottom}" stroke="#CCCCCC" stroke-width="1"/>`;
+
+  // right axis labels (secondary)
+  if (lines) {
+    const glr = gridLines(lineMax, 4);
+    glr.forEach(v => {
+      const y = bottom - (v / lineMax) * plotH;
+      svg += `<text x="${left + plotW + 8}" y="${y + 3}" font-size="10" fill="${C.black}" text-anchor="start">${v}${opts.lineSuffix || ""}</text>`;
+    });
+    svg += `<line x1="${left + plotW}" y1="${top}" x2="${left + plotW}" y2="${bottom}" stroke="#CCCCCC" stroke-width="1"/>`;
+  }
+
+  // bars
+  categories.forEach((cat, i) => {
+    const val = bars.values[i];
+    const barH = (val / barMax) * plotH;
+    const x = left + i * slot + (slot - barW) / 2;
+    const y = bottom - barH;
+    svg += `<rect x="${x}" y="${y}" width="${barW}" height="${barH}" rx="3" fill="${bars.color}"/>`;
+    svg += `<text x="${x + barW / 2}" y="${y - 5}" font-size="9.5" fill="${C.black}" text-anchor="middle">${fmt(val)}</text>`;
+  });
+
+  // category labels (rotated)
+  categories.forEach((cat, i) => {
+    const x = left + i * slot + slot / 2;
+    const y = bottom + 14;
+    if (opts.rotateLabels === false) {
+      svg += `<text x="${x}" y="${y}" font-size="10.5" fill="${C.black}" text-anchor="middle">${escapeXml(cat)}</text>`;
+    } else {
+      svg += `<text x="${x}" y="${y}" font-size="9.5" fill="${C.black}" text-anchor="end" transform="rotate(-35 ${x} ${y})">${escapeXml(cat)}</text>`;
+    }
+  });
+
+  // line + points
+  if (lines) {
+    const pts = categories.map((cat, i) => {
+      const x = left + i * slot + slot / 2;
+      const y = bottom - (lines.values[i] / lineMax) * plotH;
+      return [x, y];
+    });
+    const path = pts.map((p, i) => (i === 0 ? "M" : "L") + p[0] + "," + p[1]).join(" ");
+    svg += `<path d="${path}" fill="none" stroke="${lines.color}" stroke-width="2.5"/>`;
+    pts.forEach((p, i) => {
+      svg += `<circle cx="${p[0]}" cy="${p[1]}" r="3.2" fill="${lines.color}"/>`;
+      svg += `<text x="${p[0]}" y="${p[1] - 8}" font-size="9" fill="${C.black}" text-anchor="middle">${lines.values[i]}${opts.lineSuffix || ""}</text>`;
+    });
+  }
+
+  svg += `</svg>`;
+  document.getElementById(elId).innerHTML = svg;
+
+  // legend
+  let legend = `<div class="legend-row">`;
+  legend += `<div class="legend-item"><span class="legend-swatch" style="background:${bars.color}"></span>${bars.label}</div>`;
+  if (lines) legend += `<div class="legend-item"><span class="legend-line" style="background:${lines.color}"></span>${lines.label}</div>`;
+  legend += `</div>`;
+  document.getElementById(elId).innerHTML += legend;
+}
+
+// Stacked vertical bar chart
+function stackedBarChart(elId, categories, series) {
+  const W = 900, H = 340;
+  const left = 55, right = 20, top = 20, bottom = H - 78;
+  const plotW = W - left - right, plotH = bottom - top;
+  const n = categories.length;
+  const slot = plotW / n;
+  const barW = slot * 0.55;
+
+  const totals = categories.map((_, i) => series.reduce((s, ser) => s + ser.values[i], 0));
+  const maxTotal = niceMax(Math.max(...totals) * 1.05);
+
+  let svg = `<svg viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg" font-family="Arial, sans-serif">`;
+
+  const gl = gridLines(maxTotal, 4);
+  gl.forEach(v => {
+    const y = bottom - (v / maxTotal) * plotH;
+    svg += `<line x1="${left}" y1="${y}" x2="${left + plotW}" y2="${y}" stroke="#EAF3EA" stroke-width="1"/>`;
+    svg += `<text x="${left - 8}" y="${y + 3}" font-size="10" fill="${C.black}" text-anchor="end">${fmt(v)}</text>`;
+  });
+  svg += `<line x1="${left}" y1="${top}" x2="${left}" y2="${bottom}" stroke="#CCCCCC" stroke-width="1"/>`;
+  svg += `<line x1="${left}" y1="${bottom}" x2="${left + plotW}" y2="${bottom}" stroke="#CCCCCC" stroke-width="1"/>`;
+
+  categories.forEach((cat, i) => {
+    const x = left + i * slot + (slot - barW) / 2;
+    let yCursor = bottom;
+    series.forEach(ser => {
+      const val = ser.values[i];
+      if (val <= 0) return;
+      const h = (val / maxTotal) * plotH;
+      const y = yCursor - h;
+      svg += `<rect x="${x}" y="${y}" width="${barW}" height="${h}" fill="${ser.color}"/>`;
+      if (h > 14) {
+        svg += `<text x="${x + barW / 2}" y="${y + h / 2 + 3}" font-size="8.5" fill="#fff" text-anchor="middle">${fmt(val)}</text>`;
+      }
+      yCursor = y;
+    });
+    const xLbl = left + i * slot + slot / 2;
+    const yLbl = bottom + 14;
+    svg += `<text x="${xLbl}" y="${yLbl}" font-size="9.5" fill="${C.black}" text-anchor="end" transform="rotate(-35 ${xLbl} ${yLbl})">${escapeXml(cat)}</text>`;
+  });
+
+  svg += `</svg>`;
+  document.getElementById(elId).innerHTML = svg;
+
+  let legend = `<div class="legend-row">`;
+  series.forEach(ser => {
+    legend += `<div class="legend-item"><span class="legend-swatch" style="background:${ser.color}"></span>${ser.name}</div>`;
+  });
+  legend += `</div>`;
+  document.getElementById(elId).innerHTML += legend;
+}
+
+// Simple vertical bar chart (single series)
+function simpleBarChart(elId, categories, values, color, opts) {
+  opts = opts || {};
+  const W = 900, H = opts.height || 300;
+  const left = 55, right = 20, top = 20, bottom = H - (opts.bottomPad || 45);
+  const plotW = W - left - right, plotH = bottom - top;
+  const n = categories.length;
+  const slot = plotW / n;
+  const barW = slot * 0.5;
+  const maxVal = niceMax(Math.max(...values) * 1.15);
+
+  let svg = `<svg viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg" font-family="Arial, sans-serif">`;
+  const gl = gridLines(maxVal, 4);
+  gl.forEach(v => {
+    const y = bottom - (v / maxVal) * plotH;
+    svg += `<line x1="${left}" y1="${y}" x2="${left + plotW}" y2="${y}" stroke="#EAF3EA" stroke-width="1"/>`;
+    svg += `<text x="${left - 8}" y="${y + 3}" font-size="10" fill="${C.black}" text-anchor="end">${v}${opts.suffix||""}</text>`;
+  });
+  svg += `<line x1="${left}" y1="${top}" x2="${left}" y2="${bottom}" stroke="#CCCCCC" stroke-width="1"/>`;
+  svg += `<line x1="${left}" y1="${bottom}" x2="${left + plotW}" y2="${bottom}" stroke="#CCCCCC" stroke-width="1"/>`;
+
+  categories.forEach((cat, i) => {
+    const val = values[i];
+    const h = (val / maxVal) * plotH;
+    const x = left + i * slot + (slot - barW) / 2;
+    const y = bottom - h;
+    svg += `<rect x="${x}" y="${y}" width="${barW}" height="${h}" rx="3" fill="${color}"/>`;
+    svg += `<text x="${x + barW/2}" y="${y - 6}" font-size="10.5" fill="${C.black}" text-anchor="middle">${val}${opts.suffix||""}</text>`;
+    const xLbl = x + barW/2, yLbl = bottom + 16;
+    svg += `<text x="${xLbl}" y="${yLbl}" font-size="11" fill="${C.black}" text-anchor="middle">${escapeXml(cat)}</text>`;
+  });
+  svg += `</svg>`;
+  document.getElementById(elId).innerHTML = svg;
+}
+
+// Horizontal bar chart
+function horizontalBarChart(elId, categories, values, color) {
+  const W = 900, rowH = 42, top = 15, bottom = 15;
+  const H = categories.length * rowH + top + bottom;
+  const left = 150, right = 60;
+  const plotW = W - left - right;
+  const maxVal = niceMax(Math.max(...values) * 1.15);
+
+  let svg = `<svg viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg" font-family="Arial, sans-serif">`;
+  categories.forEach((cat, i) => {
+    const y = top + i * rowH;
+    const barH = rowH * 0.55;
+    const w = (values[i] / maxVal) * plotW;
+    svg += `<text x="${left - 10}" y="${y + barH/2 + 4}" font-size="11" fill="${C.black}" text-anchor="end">${escapeXml(cat)}</text>`;
+    svg += `<rect x="${left}" y="${y}" width="${w}" height="${barH}" rx="3" fill="${color}"/>`;
+    svg += `<text x="${left + w + 8}" y="${y + barH/2 + 4}" font-size="10.5" fill="${C.black}" text-anchor="start">${fmt(values[i])}</text>`;
+  });
+  svg += `</svg>`;
+  document.getElementById(elId).innerHTML = svg;
+}
+
+// Line chart with optional null gaps
+function lineChart(elId, categories, values, color, opts) {
+  opts = opts || {};
+  const W = 900, H = opts.height || 260;
+  const left = 55, right = 20, top = 20, bottom = H - 40;
+  const plotW = W - left - right, plotH = bottom - top;
+  const n = categories.length;
+  const slot = plotW / (n - 1 || 1);
+  const nonNull = values.filter(v => v !== null && v !== undefined);
+  const maxVal = niceMax(Math.max(...nonNull) * 1.15);
+
+  let svg = `<svg viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg" font-family="Arial, sans-serif">`;
+  const gl = gridLines(maxVal, 4);
+  gl.forEach(v => {
+    const y = bottom - (v / maxVal) * plotH;
+    svg += `<line x1="${left}" y1="${y}" x2="${left + plotW}" y2="${y}" stroke="#EAF3EA" stroke-width="1"/>`;
+    svg += `<text x="${left - 8}" y="${y + 3}" font-size="10" fill="${C.black}" text-anchor="end">${v}${opts.suffix||""}</text>`;
+  });
+  svg += `<line x1="${left}" y1="${top}" x2="${left}" y2="${bottom}" stroke="#CCCCCC" stroke-width="1"/>`;
+  svg += `<line x1="${left}" y1="${bottom}" x2="${left + plotW}" y2="${bottom}" stroke="#CCCCCC" stroke-width="1"/>`;
+
+  const pts = categories.map((cat, i) => {
+    const x = left + i * slot;
+    const v = values[i];
+    const y = v === null || v === undefined ? null : bottom - (v / maxVal) * plotH;
+    return { x, y, v };
+  });
+
+  // draw segments, breaking at nulls
+  let path = "";
+  let drawing = false;
+  pts.forEach(p => {
+    if (p.y === null) { drawing = false; return; }
+    path += (drawing ? "L" : "M") + p.x + "," + p.y + " ";
+    drawing = true;
+  });
+  svg += `<path d="${path.trim()}" fill="none" stroke="${color}" stroke-width="2.5"/>`;
+
+  pts.forEach(p => {
+    if (p.y === null) return;
+    svg += `<circle cx="${p.x}" cy="${p.y}" r="3.2" fill="${color}"/>`;
+    svg += `<text x="${p.x}" y="${p.y - 8}" font-size="9" fill="${C.black}" text-anchor="middle">${p.v}${opts.suffix||""}</text>`;
+  });
+
+  categories.forEach((cat, i) => {
+    const x = left + i * slot;
+    svg += `<text x="${x}" y="${bottom + 16}" font-size="10.5" fill="${C.black}" text-anchor="middle">${escapeXml(cat)}</text>`;
+  });
+
+  svg += `</svg>`;
+  document.getElementById(elId).innerHTML = svg;
+}
+
+function escapeXml(s) {
+  return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+}
+
+// ================= RENDER MAIN CHARTS =================
+comboChart("paretoChart", PARETO.map(d => d.causa),
+  { values: PARETO.map(d => d.unidades), color: C.midGreen, label: "Unidades" },
+  { values: PARETO.map(d => d.acumulado), color: C.darkGreen, label: "% Acumulado" },
+  { lineMax: 100, lineSuffix: "%" }
+);
+
+stackedBarChart("referenciaChart", REFERENCIA.map(d => d.motivo), [
+  { name: "FAMILIAR", color: REF_COLORS.FAMILIAR, values: REFERENCIA.map(d => d.FAMILIAR) },
+  { name: "PERSONAL", color: REF_COLORS.PERSONAL, values: REFERENCIA.map(d => d.PERSONAL) },
+  { name: "REF PET", color: REF_COLORS["REF PET"], values: REFERENCIA.map(d => d["REF PET"]) },
+]);
+
+comboChart("locacionesChart", LOCACIONES.map(d => d.origen),
+  { values: LOCACIONES.map(d => d.defectos), color: C.midGreen, label: "Defectos (un.)" },
+  { values: LOCACIONES.map(d => d.tasa), color: C.darkGreen, label: "Tasa (%)" },
+  { lineSuffix: "%" }
+);
+
+lineChart("tendenciaChart", TENDENCIA.map(d => d.semana), TENDENCIA.map(d => d.tasa), C.darkGreen, { suffix: "%", height: 240 });
+
+// ================= LOCATION DETAIL (interactive) =================
+const tabsEl = document.getElementById("locTabs");
+let selectedLoc = "Barranquilla Sur";
+
+function renderTabs() {
+  tabsEl.innerHTML = Object.keys(LOC_DETAIL).map(name =>
+    `<button class="tab-btn ${name === selectedLoc ? "active" : ""}" data-name="${name}">${name}</button>`
+  ).join("");
+  tabsEl.querySelectorAll(".tab-btn").forEach(btn => {
+    btn.addEventListener("click", () => {
+      selectedLoc = btn.getAttribute("data-name");
+      renderTabs();
+      renderLocationDetail();
+    });
+  });
+}
+
+function renderLocationDetail() {
+  const loc = LOC_DETAIL[selectedLoc];
+
+  document.getElementById("locKpis").innerHTML = `
+    <div class="loc-kpi"><div class="value">${fmt(loc.cajas)}</div><div class="label">Cajas inspeccionadas</div></div>
+    <div class="loc-kpi"><div class="value">${fmt(loc.defectos)}</div><div class="label">Defectos</div></div>
+    <div class="loc-kpi"><div class="value">${loc.tasa}%</div><div class="label">Tasa de rechazo</div></div>
+  `;
+
+  document.getElementById("causasTitle").textContent = `${selectedLoc} — Principales causas de rechazo`;
+  document.getElementById("refLocTitle").textContent = `${selectedLoc} — Cantidad de defectos por referencia`;
+  document.getElementById("semanalLocTitle").textContent = `${selectedLoc} — Tendencia semanal de tasa (%)`;
+
+  document.getElementById("semanalLocFoot").textContent = loc.note || "";
+
+  horizontalBarChart("causasChart", loc.causas.map(d => d.causa), loc.causas.map(d => d.valor), C.midGreen);
+  simpleBarChart("refLocChart", loc.referencia.map(d => d.ref), loc.referencia.map(d => d.valor), C.darkGreen, { bottomPad: 30, height: 260 });
+  lineChart("semanalLocChart", loc.semanal.map(d => d.semana), loc.semanal.map(d => d.tasa), C.darkGreen, { suffix: "%", height: 240 });
+
+  document.getElementById("insightTitle").textContent = `${selectedLoc} — Lectura del detalle`;
+  document.getElementById("insightText").innerHTML = buildInsightText(selectedLoc, loc);
+}
+
+function buildInsightText(nombre, loc) {
+  // Causas: causa principal y su participación
+  const totalCausas = loc.causas.reduce((s, c) => s + c.valor, 0);
+  const topCausa = [...loc.causas].sort((a, b) => b.valor - a.valor)[0];
+  const pctCausa = ((topCausa.valor / totalCausas) * 100).toFixed(0);
+
+  // Referencia: cual domina
+  const totalRef = loc.referencia.reduce((s, r) => s + r.valor, 0);
+  const refSorted = [...loc.referencia].sort((a, b) => b.valor - a.valor);
+  const topRef = refSorted[0];
+  const pctRef = ((topRef.valor / totalRef) * 100).toFixed(0);
+
+  // Semanal: semana pico y semana mas baja (ignorando nulls)
+  const semValid = loc.semanal.filter(s => s.tasa !== null && s.tasa !== undefined);
+  const semSorted = [...semValid].sort((a, b) => b.tasa - a.tasa);
+  const semanaPico = semSorted[0];
+  const semanaBaja = semSorted[semSorted.length - 1];
+
+  // Envase Personal: participacion especifica
+  const personalRef = loc.referencia.find(r => r.ref === "PERSONAL");
+  const pctPersonal = personalRef ? ((personalRef.valor / totalRef) * 100).toFixed(0) : null;
+  const totalPersonalGlobal = GRUPOS.envase.items.find(i => i.label === "PERSONAL").valor;
+  const pctPersonalGlobal = personalRef ? ((personalRef.valor / totalPersonalGlobal) * 100).toFixed(1) : null;
+
+  return `
+    <b>Causas:</b> ${topCausa.causa} concentra el ${pctCausa}% de los defectos, la causa dominante en ${nombre}.<br>
+    <b>Referencia:</b> ${topRef.ref} es la más afectada con ${fmt(topRef.valor)} defectos (${pctRef}% del total de la locación).<br>
+    ${personalRef ? `<b>Envase Personal:</b> aporta ${fmt(personalRef.valor)} defectos (${pctPersonal}% del total de ${nombre}). ${nombre} representa el ${pctPersonalGlobal}% del total de defectos de Envase Personal en todas las locaciones.<br>` : ""}
+    <b>Tendencia:</b> el pico de la locación fue en ${semanaPico.semana} (${semanaPico.tasa}%), con el nivel más bajo en ${semanaBaja.semana} (${semanaBaja.tasa}%).
+  `;
+}
+
+renderTabs();
+renderLocationDetail();
+
+// ================= INSUMOS VIEW =================
+document.getElementById("kpiRowInsumos").innerHTML = KPIS_INS.map(k =>
+  `<div class="kpi-card" style="background:#5D6D5E;"><div class="value">${k.value}</div><div class="label">${k.label}</div></div>`
+).join("");
+
+document.getElementById("atencionGridIns").innerHTML = ATENCION_INS.map(p => `
+  <div class="profundizar-card" style="background:#EFF2EF;">
+    <div class="head"><div class="icon-circle" style="background:#5D6D5E;">${p.icon}</div><div class="ptitle" style="color:#3E4A3F;">${p.title}</div></div>
+    <div class="ptext">${p.text}</div>
+  </div>`).join("");
+
+let insumosChartsRendered = false;
+function renderInsumosCharts() {
+  if (insumosChartsRendered) return;
+  insumosChartsRendered = true;
+
+  comboChart("paretoChartIns", PARETO_INS.map(d => d.causa),
+    { values: PARETO_INS.map(d => d.unidades), color: "#5D6D5E", label: "Unidades" },
+    { values: PARETO_INS.map(d => d.acumulado), color: "#2E3B2F", label: "% Acumulado" },
+    { lineMax: 100, lineSuffix: "%" }
+  );
+
+  simpleBarChart("referenciaChartIns", REFERENCIA_INS.map(d => d.tipo), REFERENCIA_INS.map(d => d.valor), "#5D6D5E", { bottomPad: 30, height: 260 });
+
+  comboChart("locacionesChartIns", LOCACIONES_INS.map(d => d.origen),
+    { values: LOCACIONES_INS.map(d => d.defectos), color: "#5D6D5E", label: "Defectos (un.)" },
+    { values: LOCACIONES_INS.map(d => d.tasa), color: "#2E3B2F", label: "Tasa (%)" },
+    { lineSuffix: "%" }
+  );
+
+  lineChart("tendenciaChartIns", TENDENCIA_INS.map(d => d.semana), TENDENCIA_INS.map(d => d.tasa), "#5D6D5E", { suffix: "%", height: 240 });
+}
+
+</script>
+</body>
+</html>
